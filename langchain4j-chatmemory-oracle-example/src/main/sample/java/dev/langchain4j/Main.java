@@ -1,9 +1,6 @@
 package dev.langchain4j;
-import dev.langchain4j.agent.tool.ToolExecutionRequest;
-import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.CustomMessage;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -12,7 +9,8 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.AiServices;
-import dev.langchain4j.store.chatmemory.oracle.OracleMemoryStore;
+import dev.langchain4j.store.memory.chat.oracle.OracleChatMemoryStore;
+import dev.langchain4j.store.memory.chat.oracle.OracleChatMemoryStore.ContentColumnType;
 
 public class Main {
     public static void main(String[] args) throws SQLException {
@@ -24,11 +22,13 @@ public class Main {
 
         // Create a memory store backed by Oracle DB using wallet-based datasource/connection
 
-        OracleMemoryStore memorystore = OracleMemoryStore.builder()
+        OracleChatMemoryStore memoryStore = OracleChatMemoryStore.builder()
                 .dataSource(OracleWalletDataSourceFactory.createconnection())
-                .tableName("sample")
-                .ttl(Duration.ofSeconds(40))
+                .tableName("CHAT_MEMORY_JSON")
+                .contentColumnType(ContentColumnType.JSON)
+                .createTable()
                 .build();
+
 
         // A stable identifier for the conversation session/user.
 
@@ -39,7 +39,7 @@ public class Main {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .id(memoryId)
                 .maxMessages(20)
-                .chatMemoryStore(memorystore)
+                .chatMemoryStore(memoryStore)
                 .build();
 
 
